@@ -6,6 +6,9 @@
 package coloniahormigas;
 
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -45,16 +48,15 @@ public class Colonia {
                 if (!this.repiticion(hijo)){
             
                     root.addHijos(hijo.getId());
+                    Camino camino = new Camino(root.getId(),hijo.getId());
+                    root.addCamino(camino);
                     
-                    this.añadirDistanciaCaminos(root, tablero);
-                    this.añadirFeromonasCaminos(root);
-                   
-                    
-                    
-                    
-                    System.out.println("Hijos de "+padre);
-                    System.out.println(pos); 
-                    tablero.imprimirTablero(hijo.getEstado());
+                    this.añadirDistanciaCaminos(camino, root.getEstado(), tablero.tableroFinal());
+                    this.añadirFeromonasCaminos(camino, this.ah.feromonasIniciales);
+                            
+                    //System.out.println("Hijos de "+padre);
+                    //System.out.println(pos); 
+                    //tablero.imprimirTablero(hijo.getEstado());
 
                     this.g.addEdge(hijo.getId(), hijo);
                     pos++;
@@ -73,37 +75,228 @@ public class Colonia {
             
             padre++;           
         }
-
     }
     
+    private Camino calcularProbCuatroCaminos(Nodo nodo, double random){
+        Camino camino1,camino2,camino3;
+        double rango1, rango2, rango3;
+        
+        camino1 = nodo.getCamino(0);
+        camino2 = nodo.getCamino(1);
+        camino3 = nodo.getCamino(2);
+        
+        rango1 = camino1.getProb();
+        rango2 = camino2.getProb() + rango1;
+        rango3 = camino3.getProb() + rango2;
+        
+        if(random >= 0 && random <= rango1){
+            return nodo.getCamino(0);
+        }
+        else if (random > rango1 && random <= rango2){
+            return nodo.getCamino(1);
+        }
+        else if(random > rango2 && random <= rango3){
+            return nodo.getCamino(2);
+        }
+        else{
+            return nodo.getCamino(3);
+        }
+    }
+    
+    private Camino calcularProbTresCaminos(Nodo nodo, double random){
+        Camino camino1, camino2;
+        camino1 = nodo.getCamino(0);
+        camino2 = nodo.getCamino(1);
+        
+        double rango1, rango2;
+        rango1 = camino1.getProb();
+        rango2 = rango1 + camino2.getProb();
+        
+        if (random >= 0 && random <= rango1){
+            return nodo.getCamino(0);
+        }
+        else if(random > rango1 && random <= rango2){
+            return nodo.getCamino(1);
+        }
+        else{
+            return nodo.getCamino(2);
+        }
+    }
+    
+    private Camino calcularProbDosCaminos(Nodo nodo, double random){
+        Camino camino1;
+        camino1 = nodo.getCamino(0);
+        double rango1;
+        
+        rango1 = camino1.getProb();
+
+        if (random >= 0 && random <= rango1){
+            return nodo.getCamino(0);
+        }
+        else{
+            return nodo.getCamino(1);
+        }
+    }
+    
+    private Camino calcularProbUnCaminos(Nodo nodo, double random){
+        return nodo.getCamino(0);
+    }
+    
+    private void actualizarFeromonas(Hormiga hormiga){
+        int numNodos = this.g.V();
+        int numCaminosSolucion = hormiga.numCaminos();
+        int i = 0;
+        for (int n = 0; n < numNodos; n++) {
+            Nodo nodo = this.g.getNodo(n);
+            int numCaminos = nodo.numCaminos();
+            for (int c = 0; c < numCaminos; c++) {
+                Camino camino = nodo.getCamino(c);
+                //Camino caminoHormiga = hormiga.getCamino(i);
+                if (i < numCaminosSolucion){
+                    Camino caminoHormiga = hormiga.getCamino(i);
+                    if(caminoHormiga.igualdadCaminos(camino)){
+                        i++;
+                        // cambiar feromonas camino solucion
+                        double feromonasDepositadas = this.ah.feroDepositadas(hormiga.costoCamino());
+                        double nuevasFeromonas = this.ah.nuevasFeromonas(camino.getFeromonas(),feromonasDepositadas);
+                        camino.setFeromonas(nuevasFeromonas);      
+                    }
+                    else{
+                        // cambiar feromonas resto del camino
+                        double feromonasDepositadas = 0;
+                        double nuevasFeromonas = this.ah.nuevasFeromonas(camino.getFeromonas(),feromonasDepositadas);
+                        camino.setFeromonas(nuevasFeromonas);
+                    }
+                }
+                else{
+                    // cambiar feromonas resto del camino
+                    double feromonasDepositadas = 0;
+                    double nuevasFeromonas = this.ah.nuevasFeromonas(camino.getFeromonas(),feromonasDepositadas);
+                    camino.setFeromonas(nuevasFeromonas);
+                }
+            }
+        }
+    }
+    
+    
+    public void recorrer(){
+        int numHormigas = 5;
+        Tablero tablero = new Tablero();
+        boolean solucion = false;
+        Random random = new Random();
+        Hormiga hormiga = new Hormiga();
+        int costoCamino = 0;
+        
+        for (int i = 0; i < numHormigas; i++) {
+            System.out.println("--- Hormiga "+i+"---");
+            int nodoInicial = 0;
+        
+            while (!solucion) {
+                try {
+                    Thread.sleep(250);
+                } 
+                catch (InterruptedException ex) {
+                    Logger.getLogger(Colonia.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                Nodo nodo = this.g.getNodo(nodoInicial);
+                double numRandom = random.nextDouble();
+                int numHijos = nodo.numHijos();
+
+                if (tablero.esFinal(nodo.getEstado())){
+                    System.out.println("Hay solucion");
+                    solucion = true;
+                }
+                else{
+                    if (numHijos != 0){
+                         if (numHijos == 1){
+                            Camino camino = this.calcularProbUnCaminos(nodo, numRandom);
+                            costoCamino = camino.getDistancia() + costoCamino;
+                            int nodoFinal = camino.getNodoFinal();
+                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            System.out.println(nodoInicial+"--"+nodoFinal);     
+                            nodoInicial = nodoFinal;
+                        }
+                        else if(numHijos == 2){
+                            Camino camino = this.calcularProbDosCaminos(nodo, numRandom);
+                            costoCamino = camino.getDistancia() + costoCamino;
+                            int nodoFinal = camino.getNodoFinal();
+                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            System.out.println(nodoInicial+"--"+nodoFinal);
+                            nodoInicial = nodoFinal;
+                        }
+                        else if(numHijos == 3){
+                            Camino camino = this.calcularProbTresCaminos(nodo, numRandom);
+                            costoCamino = camino.getDistancia() + costoCamino;
+                            int nodoFinal = camino.getNodoFinal();
+                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            System.out.println(nodoInicial+"--"+nodoFinal);
+                            nodoInicial = nodoFinal;
+                        }
+                        else if(numHijos == 4){
+                            Camino camino = this.calcularProbCuatroCaminos(nodo, numRandom);
+                            costoCamino = camino.getDistancia() + costoCamino;
+                            int nodoFinal = camino.getNodoFinal();
+                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            System.out.println(nodoInicial+"--"+nodoFinal);
+                            nodoInicial = nodoFinal;
+                        }  
+                    }
+                    else{
+                        break;
+                    }
+                }
+            }
+            
+            hormiga.setCostoCamino(costoCamino);
+            this.actualizarFeromonas(hormiga);
+            this.actualizarProb();
+            
+            
+        }
+    }
+    
+    private void actualizarProb(){
+        int n = this.g.V();
+        for (int j = 0; j < n; j++) {
+                Nodo nodo = this.g.getNodo(j);
+                this.añadirProbCaminos(nodo);
+                if (nodo.numCaminos() != 0){
+                    nodo.mostrarInformacionCaminos();
+                }
+            }
+    }
+    
+    
     private void añadirProbCaminos(Nodo nodo){
-        int n = nodo.numHijos();
+        int numCaminos = nodo.numCaminos();
         double sumaProductoDistanciaFeromonas = 0;
-        for (int i = 0; i < n; i++) {
-            int distancia = nodo.getDistancia(i);
-            double feromonas = nodo.getFeromonas(i);
+        for (int i = 0; i < numCaminos; i++) {
+            Camino camino = nodo.getCamino(i);
+            int distancia = camino.getDistancia();
+            double feromonas = camino.getFeromonas();
             sumaProductoDistanciaFeromonas = sumaProductoDistanciaFeromonas + distancia*feromonas;
         }
         
-        for (int i = 0; i < n; i++) {
-            int distancia = nodo.getDistancia(i);
-            double feromonas = nodo.getFeromonas(i);
-            
+        for (int i = 0; i < numCaminos; i++) {
+            Camino camino = nodo.getCamino(i);
+            int distancia = camino.getDistancia();
+            double feromonas = camino.getFeromonas();
             double prob = (distancia*feromonas)/sumaProductoDistanciaFeromonas;
-            nodo.addProb(prob);
-
+            camino.setProb(prob);
         }
-        
     }
     
-    private void añadirDistanciaCaminos(Nodo nodo, Tablero tablero){
-        int estado[][] = nodo.getEstado();
-        int distancia = this.h.distanciaManhattan(estado, tablero.tableroFinal());
-        nodo.addDistancia(distancia);
+ 
+    
+    private void añadirDistanciaCaminos(Camino camino,int t0[][], int tf[][]){
+        int distancia = this.h.distanciaManhattan(t0, tf);
+        camino.setDistancia(distancia);
     }
     
-    private void añadirFeromonasCaminos(Nodo nodo){
-        nodo.addFeromonas(this.ah.feromonasIniciales);
+    
+    
+    private void añadirFeromonasCaminos(Camino camino, double feromona){
+        camino.setFeromonas(feromona);
     }
     
     public boolean repiticion(Nodo nodoHijo){
@@ -121,6 +314,5 @@ public class Colonia {
             padre = nodoPadre.getPadre();
         }
         return repeticion;
-    }
-    
+    }  
 }

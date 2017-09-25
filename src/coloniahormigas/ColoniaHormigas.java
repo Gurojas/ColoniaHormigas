@@ -5,6 +5,9 @@
  */
 package coloniahormigas;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 
 /**
  *
@@ -20,15 +23,8 @@ public class ColoniaHormigas {
         
         Colonia colonia = new Colonia();
         colonia.construirColonia();
-        
-        /*
-        Heuristica h = new Heuristica();
-        
-        int t1[][] = {{0,3,7},{8,1,4},{2,6,5}};
-        int t2[][] = {{1,2,3},{8,0,4},{7,6,5}};
-        
-        System.out.println(h.distanciaManhattan(t1, t2));
-          */     
+        colonia.recorrer();
+          
 
         
     }

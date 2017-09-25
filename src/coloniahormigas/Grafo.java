@@ -72,6 +72,10 @@ public class Grafo {
         return adj.get(v);
     }
     
+    public int numNodos(){
+        return this.adj.size();
+    }
+    
     
     
     
