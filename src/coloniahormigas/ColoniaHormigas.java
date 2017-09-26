@@ -21,9 +21,15 @@ public class ColoniaHormigas {
     public static void main(String[] args) {
         // TODO code application logic here
         
+        Tablero tablero = new Tablero();
+        System.out.println("---- Tablero Inicial---");
+        tablero.imprimirTablero(tablero.tableroInicial());
+        System.out.println("---- Tablero Final ----");
+        tablero.imprimirTablero(tablero.tableroFinal());
+        
         Colonia colonia = new Colonia();
         colonia.construirColonia();
-        colonia.recorrer();
+        colonia.recorrer(20);
           
 
         

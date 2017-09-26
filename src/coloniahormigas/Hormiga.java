@@ -44,6 +44,14 @@ public class Hormiga {
         return this.caminos.size();
     }
     
+    public int costoTotalCaminos(){
+        int n = this.caminos.size();
+        int costoTotal = 0;
+        for (int i = 0; i < n; i++) {
+            costoTotal = this.caminos.get(i).getDistancia() + costoTotal;
+        }
+        return costoTotal;
+    }
     
     
 }

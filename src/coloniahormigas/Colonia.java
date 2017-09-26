@@ -47,13 +47,12 @@ public class Colonia {
                 // reviso si hay repeticiones
                 if (!this.repiticion(hijo)){
             
-                    root.addHijos(hijo.getId());
+                    //root.addHijos(hijo.getId());
                     Camino camino = new Camino(root.getId(),hijo.getId());
                     root.addCamino(camino);
                     
                     this.añadirDistanciaCaminos(camino, root.getEstado(), tablero.tableroFinal());
                     this.añadirFeromonasCaminos(camino, this.ah.feromonasIniciales);
-                            
                     //System.out.println("Hijos de "+padre);
                     //System.out.println(pos); 
                     //tablero.imprimirTablero(hijo.getEstado());
@@ -64,15 +63,13 @@ public class Colonia {
                     // compruebo si el nodo que agrege es solucion
                     if (tablero.esFinal(hijo.getEstado())){
                         solucion = true;
+                        System.out.println(pos);
                         break;
                     }
                 }
             }
-            
             this.añadirProbCaminos(root);
             root.mostrarInformacionCaminos();
-            
-            
             padre++;           
         }
     }
@@ -157,7 +154,7 @@ public class Colonia {
                     if(caminoHormiga.igualdadCaminos(camino)){
                         i++;
                         // cambiar feromonas camino solucion
-                        double feromonasDepositadas = this.ah.feroDepositadas(hormiga.costoCamino());
+                        double feromonasDepositadas = this.ah.feroDepositadas(hormiga.costoTotalCaminos());
                         double nuevasFeromonas = this.ah.nuevasFeromonas(camino.getFeromonas(),feromonasDepositadas);
                         camino.setFeromonas(nuevasFeromonas);      
                     }
@@ -179,65 +176,69 @@ public class Colonia {
     }
     
     
-    public void recorrer(){
-        int numHormigas = 5;
+    public void recorrer(int numHormigas){
+        //int numHormigas = 100;
         Tablero tablero = new Tablero();
         boolean solucion = false;
         Random random = new Random();
-        Hormiga hormiga = new Hormiga();
+        
         int costoCamino = 0;
         
         for (int i = 0; i < numHormigas; i++) {
+            Hormiga hormiga = new Hormiga();
             System.out.println("--- Hormiga "+i+"---");
             int nodoInicial = 0;
         
             while (!solucion) {
-                try {
-                    Thread.sleep(250);
-                } 
-                catch (InterruptedException ex) {
-                    Logger.getLogger(Colonia.class.getName()).log(Level.SEVERE, null, ex);
-                }
                 Nodo nodo = this.g.getNodo(nodoInicial);
                 double numRandom = random.nextDouble();
-                int numHijos = nodo.numHijos();
+                int numCaminos = nodo.numCaminos();
 
                 if (tablero.esFinal(nodo.getEstado())){
                     System.out.println("Hay solucion");
                     solucion = true;
+                    break;
                 }
                 else{
-                    if (numHijos != 0){
-                         if (numHijos == 1){
+                    if (numCaminos != 0){
+                         if (numCaminos == 1){
                             Camino camino = this.calcularProbUnCaminos(nodo, numRandom);
-                            costoCamino = camino.getDistancia() + costoCamino;
                             int nodoFinal = camino.getNodoFinal();
-                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
-                            System.out.println(nodoInicial+"--"+nodoFinal);     
+                            Camino caminoHormiga = new Camino(nodoInicial,nodoFinal);
+                            caminoHormiga.setDistancia(camino.getDistancia());
+                            hormiga.addCamino(caminoHormiga);
+                            System.out.println(nodoInicial+"--"+nodoFinal);
+                            tablero.imprimirTablero(nodo.getEstado());
                             nodoInicial = nodoFinal;
                         }
-                        else if(numHijos == 2){
+                        else if(numCaminos == 2){
                             Camino camino = this.calcularProbDosCaminos(nodo, numRandom);
-                            costoCamino = camino.getDistancia() + costoCamino;
                             int nodoFinal = camino.getNodoFinal();
-                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            Camino caminoHormiga = new Camino(nodoInicial,nodoFinal);
+                            caminoHormiga.setDistancia(camino.getDistancia());
+                            hormiga.addCamino(caminoHormiga);
                             System.out.println(nodoInicial+"--"+nodoFinal);
+                            tablero.imprimirTablero(nodo.getEstado());
                             nodoInicial = nodoFinal;
                         }
-                        else if(numHijos == 3){
+                        else if(numCaminos == 3){
                             Camino camino = this.calcularProbTresCaminos(nodo, numRandom);
-                            costoCamino = camino.getDistancia() + costoCamino;
                             int nodoFinal = camino.getNodoFinal();
-                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            Camino caminoHormiga = new Camino(nodoInicial,nodoFinal);
+                            caminoHormiga.setDistancia(camino.getDistancia());
+                            hormiga.addCamino(caminoHormiga);
                             System.out.println(nodoInicial+"--"+nodoFinal);
+                            tablero.imprimirTablero(nodo.getEstado());
                             nodoInicial = nodoFinal;
                         }
-                        else if(numHijos == 4){
+                        else if(numCaminos == 4){
                             Camino camino = this.calcularProbCuatroCaminos(nodo, numRandom);
-                            costoCamino = camino.getDistancia() + costoCamino;
                             int nodoFinal = camino.getNodoFinal();
-                            hormiga.addCamino(new Camino(nodoInicial,nodoFinal));
+                            Camino caminoHormiga = new Camino(nodoInicial,nodoFinal);
+                            caminoHormiga.setDistancia(camino.getDistancia());
+                            hormiga.addCamino(caminoHormiga);
                             System.out.println(nodoInicial+"--"+nodoFinal);
+                            tablero.imprimirTablero(nodo.getEstado());
                             nodoInicial = nodoFinal;
                         }  
                     }
@@ -246,10 +247,11 @@ public class Colonia {
                     }
                 }
             }
-            
-            hormiga.setCostoCamino(costoCamino);
+            System.out.println("Costo del camino hormiga "+i+": "+hormiga.costoTotalCaminos());
+            //hormiga.setCostoCamino(costoCamino);
             this.actualizarFeromonas(hormiga);
             this.actualizarProb();
+            solucion = false;
             
             
         }
@@ -260,9 +262,11 @@ public class Colonia {
         for (int j = 0; j < n; j++) {
                 Nodo nodo = this.g.getNodo(j);
                 this.añadirProbCaminos(nodo);
+                
                 if (nodo.numCaminos() != 0){
                     nodo.mostrarInformacionCaminos();
                 }
+                        
             }
     }
     

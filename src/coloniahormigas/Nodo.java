@@ -16,9 +16,6 @@ public class Nodo {
     private int id;
     private int[][] estado;
     private ArrayList<Integer> hijos;
-    //private ArrayList<Double> feromonas;
-    //private ArrayList<Integer> distanciaManhattan;
-    //private ArrayList<Double> prob;
     private int padre;
     private ArrayList<Camino> caminos;
 
@@ -45,19 +42,6 @@ public class Nodo {
     public void setEstado(int[][] t) {
         this.estado = t;
     }
-    /*
-    public void addFeromonas(double feromonas){
-        this.feromonas.add(feromonas);
-    }
-    
-    public double getFeromonas(int f){
-        return this.feromonas.get(f);
-    }
-    
-    public void setFeromonas(double feromonas, int f){
-        this.feromonas.set(f, feromonas);
-    }
-    */
     
     public void addHijos(int h){
         this.hijos.add(h);
@@ -70,23 +54,6 @@ public class Nodo {
     public int numHijos(){
         return this.hijos.size();
     }
-    /*
-    public void addDistancia(int d){
-        this.distanciaManhattan.add(d);
-    }
-    
-    public int getDistancia(int d){
-        return this.distanciaManhattan.get(d);
-    }
-    
-    public void addProb(double p){
-        this.prob.add(p);
-    }
-    
-    public double getProb(int p){
-        return this.prob.get(p);
-    }
-    */
     
     public int getPadre(){
         return this.padre;
@@ -101,7 +68,7 @@ public class Nodo {
         int numCaminos = this.caminos.size();
         for (int i = 0; i < numCaminos; i++) {
             Camino camino = this.caminos.get(i);
-            int h = this.hijos.get(i);
+            int h = camino.getNodoFinal();  //this.hijos.get(i);
             int dist = camino.getDistancia();
             double fero = camino.getFeromonas();
             double prob = camino.getProb();
